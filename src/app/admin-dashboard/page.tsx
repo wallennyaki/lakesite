@@ -197,11 +197,11 @@ function LoginForm({ onLogin }: { onLogin: (u: AuthUser) => void }) {
       <div className="relative z-10 w-full max-w-md">
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-3 mb-3">
-            <img
-  src="/assets/images/lakesite.jpg"
-  alt="Lakesite Soccer Academy"
-  className="w-[52px] h-[52px] object-contain rounded-xl"
-/>
+            <svg width="52" height="52" viewBox="0 0 48 48" fill="none">
+              <path d="M24 2L4 10v14c0 12 8.5 22.5 20 26 11.5-3.5 20-14 20-26V10L24 2z" fill="#800020" />
+              <path d="M24 6L7 13v11c0 10 7 19 17 22 10-3 17-12 17-22V13L24 6z" fill="#6b0019" />
+              <text x="24" y="30" textAnchor="middle" fill="white" fontSize="13" fontWeight="800" fontFamily="sans-serif">LSA</text>
+            </svg>
             <div>
               <span className="text-white font-extrabold text-lg block leading-tight">LAKESITE SOCCER</span>
               <span className="text-white/50 text-xs tracking-widest">ACADEMY</span>
@@ -217,6 +217,7 @@ function LoginForm({ onLogin }: { onLogin: (u: AuthUser) => void }) {
     <label className="block text-xs font-bold uppercase tracking-wider text-white/50 mb-1.5">
       Email
     </label>
+
               <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)}
                 className="w-full bg-white/5 border border-white/15 rounded-xl px-4 py-3 text-white placeholder:text-white/25 text-sm focus:outline-none focus:border-[#800020] transition-colors"
                 placeholder="your@email.com" />
@@ -1719,13 +1720,8 @@ export default function AdminDashboardPage() {
       <div className="min-h-screen bg-gray-50">
         <header className="bg-[#800020] px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            
-           <img
-  src="/assets/images/lakesite.jpg"
-  alt="Lakesite Soccer Academy"
-  className="w-9 h-9 object-contain rounded-lg"
-/>
-<span className="text-white font-extrabold">Player Portal</span>
+            <svg width="36" height="36" viewBox="0 0 48 48" fill="none"><path d="M24 2L4 10v14c0 12 8.5 22.5 20 26 11.5-3.5 20-14 20-26V10L24 2z" fill="white" fillOpacity="0.3" /><text x="24" y="30" textAnchor="middle" fill="white" fontSize="13" fontWeight="800" fontFamily="sans-serif">LSA</text></svg>
+            <span className="text-white font-extrabold">Player Portal</span>
           </div>
           <div className="flex items-center gap-3">
             <span className="text-white/70 text-sm hidden sm:block">{auth.name}</span>

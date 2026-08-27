@@ -47,7 +47,7 @@ const handleSubmit = async (e: React.FormEvent) => {
 
     const firstName = nameParts[0] || '';
     const lastName = nameParts.slice(1).join(' ') || 'N/A';
-
+console.log('Using Supabase URL:', process.env.NEXT_PUBLIC_SUPABASE_URL);
     const { data, error } = await supabase
       .from('player_applications')
       .insert({

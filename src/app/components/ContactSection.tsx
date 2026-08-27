@@ -1,15 +1,41 @@
 'use client';
 import React, { useState } from 'react';
+import { supabase } from '@/lib/supabase';
 
 export default function ContactSection() {
   const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' });
   const [sent, setSent] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setSent(true);
-  };
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
 
+  const { data: userData, error: userError } = await supabase.auth.getUser();
+
+  console.log('AUTH USER:', userData.user);
+  console.log('AUTH ERROR:', userError);
+
+  const { data, error } = await supabase
+    .from('contact_messages')
+    .insert({
+      name: form.name,
+      email: form.email,
+      subject: form.subject,
+      message: form.message,
+    })
+    .select();
+
+  console.log('INSERT DATA:', data);
+  console.log('INSERT ERROR:', error);
+
+  if (error) {
+    alert(`Supabase error: ${error.message}`);
+    return;
+  }
+
+  alert('Message successfully saved!');
+  setSent(true);
+  setForm({ name: '', email: '', subject: '', message: '' });
+};
   return (
     <section id="contact" className="bg-secondary py-20 px-6 relative overflow-hidden">
       <div className="absolute inset-0 pitch-pattern opacity-10" />
