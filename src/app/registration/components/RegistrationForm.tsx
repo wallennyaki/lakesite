@@ -1,7 +1,7 @@
 'use client';
 import React, { useState } from 'react';
-import { supabase } from '../../../lib/supabase';
-
+import { supabase } from '@/lib/supabase';
+console.log('Using Supabase URL:', process.env.NEXT_PUBLIC_SUPABASE_URL);
 type FormData = {
   fullName: string;
   dob: string;
@@ -28,6 +28,7 @@ const positions = ['Goalkeeper', 'Defender', 'Midfielder', 'Forward', 'Not Sure 
 const ageGroups = ['U8 (Ages 5–8)', 'U12 (Ages 9–12)', 'U16 (Ages 13–16)', 'U19 (Ages 17–19)', 'Senior (Ages 20+)'];
 
 export default function RegistrationForm() {
+    console.log('REGISTRATION FORM COMPONENT IS RUNNING');
   const [form, setForm] = useState<FormData>(initialForm);
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -35,9 +36,13 @@ export default function RegistrationForm() {
   const set = (field: keyof FormData, val: string) => setForm((p) => ({ ...p, [field]: val }));
 
 const handleSubmit = async (e: React.FormEvent) => {
+  console.log('HANDLE SUBMIT CALLED');
   e.preventDefault();
-  setLoading(true);
 
+  console.log('HANDLE SUBMIT STARTED');
+  console.log('FORM DATA:', form);
+
+  setLoading(true);
   const referenceNumber = `LFA-${new Date().getFullYear()}-${Math.floor(
     Math.random() * 9000
   ) + 1000}`;
@@ -47,8 +52,8 @@ const handleSubmit = async (e: React.FormEvent) => {
 
     const firstName = nameParts[0] || '';
     const lastName = nameParts.slice(1).join(' ') || 'N/A';
-console.log('Using Supabase URL:', process.env.NEXT_PUBLIC_SUPABASE_URL);
-    const { data, error } = await supabase
+
+    const { error } = await supabase
       .from('player_applications')
       .insert({
         reference_number: referenceNumber,
@@ -62,18 +67,12 @@ console.log('Using Supabase URL:', process.env.NEXT_PUBLIC_SUPABASE_URL);
         medical_conditions: form.medicalNotes || null,
         additional_notes: `Age Group: ${form.ageGroup}`,
         status: 'pending',
-      })
-      .select();
+      });
 
-
+    console.log('PLAYER APPLICATION ERROR:', error);
 
     if (error) {
       alert(`Supabase error: ${error.message}`);
-      return;
-    }
-
-    if (!data || data.length === 0) {
-      alert('Supabase did not return a saved record.');
       return;
     }
 
@@ -118,7 +117,7 @@ console.log('Using Supabase URL:', process.env.NEXT_PUBLIC_SUPABASE_URL);
 
   return (
     <form onSubmit={handleSubmit} className="bg-card border border-border rounded-3xl p-7 space-y-5">
-      <h2 className="text-xl font-extrabold text-foreground mb-1">Player Registration Form</h2>
+<h2 className="text-xl font-extrabold text-foreground mb-1">TEST 12345</h2>
       <p className="text-sm text-muted-foreground mb-4">
         Fields marked <span className="text-red-500">*</span> are required.
       </p>

@@ -8,23 +8,24 @@ export default function ContactSection() {
 
 const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
+const { data: sessionData } = await supabase.auth.getSession();
 
+console.log('SESSION USER ID:', sessionData.session?.user?.id);
+console.log('SESSION USER ROLE:', sessionData.session?.user?.role);
   const { data: userData, error: userError } = await supabase.auth.getUser();
 
   console.log('AUTH USER:', userData.user);
   console.log('AUTH ERROR:', userError);
 
-  const { data, error } = await supabase
-    .from('contact_messages')
-    .insert({
-      name: form.name,
-      email: form.email,
-      subject: form.subject,
-      message: form.message,
-    })
-    .select();
+ const { error } = await supabase
+  .from('contact_messages')
+  .insert({
+    name: form.name,
+    email: form.email,
+    subject: form.subject,
+    message: form.message,
+  });
 
-  console.log('INSERT DATA:', data);
   console.log('INSERT ERROR:', error);
 
   if (error) {

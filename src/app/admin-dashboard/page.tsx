@@ -6,7 +6,7 @@ import { supabase } from '@/lib/supabase';
 // ─── Types ───────────────────────────────────────────────────────────────────
 type Role = 'ceo' | 'staff' | 'player';
 type AuthUser = { role: Role; email: string; name: string } | null;
-type Tab = 'overview' | 'players' | 'staff' | 'applications' | 'recruitment' | 'revenue' | 'content' | 'settings' | 'notifications' | 'audit';
+type Tab = 'overview' | 'players' | 'staff' | 'applications' | 'recruitment' | 'revenue' | 'content' | 'settings' | 'notifications' | 'audit'| 'messages';
 
 type AuditCategory = 'player' | 'staff' | 'application' | 'content' | 'settings' | 'system';
 
@@ -1546,7 +1546,191 @@ function AuditTab() {
     </div>
   );
 }
+// ─── Messages Tab ─────────────────────────────────────────────────────────────
+function MessagesTab() {
+  const [messages, setMessages] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedMessage, setSelectedMessage] = useState<any | null>(null);
+  const [error, setError] = useState('');
 
+ const fetchMessages = async () => { setLoading(true); setError(''); const { data, error } = await supabase .from('contact_messages') .select('id, name, email, subject, message, created_at') .order('created_at', { ascending: false }); console.log('CONTACT MESSAGES DATA:', data); console.log('CONTACT MESSAGES ERROR:', error); if (error) { console.error('Error fetching contact messages:', error); setError(`Failed to load messages: ${error.message}`); setMessages([]); } else { setMessages(data || []); } setLoading(false); };
+
+  useEffect(() => {
+    fetchMessages();
+
+    const channel = supabase
+      .channel('contact-messages-dashboard')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'contact_messages',
+        },
+        (payload) => {
+          setMessages((prev) => [payload.new, ...prev]);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  return (
+    <div className="space-y-5">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-extrabold text-gray-900">
+            Contact Messages
+          </h2>
+          <p className="text-gray-500 text-sm mt-0.5">
+            Messages received from the website
+          </p>
+        </div>
+
+        <button
+          onClick={fetchMessages}
+          className="bg-gray-100 text-gray-700 px-3 py-2 rounded-xl text-xs font-semibold hover:bg-gray-200"
+        >
+          ↻ Refresh
+        </button>
+      </div>
+
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl p-4 text-sm">
+          {error}
+        </div>
+      )}
+
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        {loading ? (
+          <div className="px-4 py-12 text-center text-gray-500">
+            Loading messages...
+          </div>
+        ) : messages.length === 0 ? (
+          <div className="px-4 py-12 text-center text-gray-400">
+            <div className="text-4xl mb-3">💬</div>
+            <p className="font-semibold">No messages yet</p>
+            <p className="text-xs mt-1">
+              Messages submitted through the website will appear here.
+            </p>
+          </div>
+        ) : (
+          <div className="divide-y divide-gray-100">
+            {messages.map((msg) => (
+              <button
+                key={msg.id}
+                onClick={() => setSelectedMessage(msg)}
+                className="w-full text-left p-4 hover:bg-gray-50 transition-colors"
+              >
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-full bg-[#800020] text-white flex items-center justify-center font-bold shrink-0">
+                    {msg.name?.charAt(0)?.toUpperCase() || '?'}
+                  </div>
+
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="font-bold text-gray-900 truncate">
+                        {msg.name}
+                      </p>
+
+                      <span className="text-xs text-gray-400 whitespace-nowrap">
+                        {new Date(msg.created_at).toLocaleString()}
+                      </span>
+                    </div>
+
+                    <p className="text-sm font-semibold text-[#800020] truncate mt-0.5">
+                      {msg.subject || 'No subject'}
+                    </p>
+
+                    <p className="text-sm text-gray-500 truncate mt-1">
+                    {msg.message || msg.text}
+                    </p>
+
+                    <p className="text-xs text-gray-400 mt-1">
+                      {msg.email}
+                    </p>
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {selectedMessage && (
+        <div
+          className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4"
+          onClick={() => setSelectedMessage(null)}
+        >
+          <div
+            className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-5">
+              <div>
+                <h3 className="text-lg font-extrabold text-gray-900">
+                  {selectedMessage.subject || 'Contact Message'}
+                </h3>
+                <p className="text-xs text-gray-400 mt-1">
+                  {new Date(selectedMessage.created_at).toLocaleString()}
+                </p>
+              </div>
+
+              <button
+                onClick={() => setSelectedMessage(null)}
+                className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200"
+              >
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                >
+                  <path d="M18 6L6 18M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div className="bg-gray-50 rounded-xl p-4">
+                <p className="text-xs text-gray-400 font-semibold mb-1">
+                  FROM
+                </p>
+                <p className="font-bold text-gray-900">
+                  {selectedMessage.name}
+                </p>
+                <p className="text-sm text-gray-500">
+                  {selectedMessage.email}
+                </p>
+              </div>
+
+              <div>
+                <p className="text-xs text-gray-400 font-semibold mb-2">
+                  MESSAGE
+                </p>
+                <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
+                 {selectedMessage.message || selectedMessage.text}
+                </p>
+              </div>
+            </div>
+
+            <button
+              onClick={() => setSelectedMessage(null)}
+              className="mt-6 w-full bg-[#800020] text-white font-bold py-2.5 rounded-xl hover:bg-[#6b0019]"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 // ─── Notifications Tab ────────────────────────────────────────────────────────
 function NotificationsTab() {
   const notifications = useNotifications();
@@ -1741,7 +1925,8 @@ export default function AdminDashboardPage() {
     { id: 'recruitment', label: 'Recruitment', icon: '🎯' },
     { id: 'revenue', label: 'Revenue', icon: '💰' },
     { id: 'content', label: 'Content', icon: '📰' },
-    { id: 'notifications', label: 'Notifications', icon: '🔔' },
+    { id: 'messages', label: 'Messages', icon: '💬' },
+{ id: 'notifications', label: 'Notifications', icon: '🔔' },
     { id: 'audit', label: 'Audit Log', icon: '🔍' },
     { id: 'settings', label: 'Settings', icon: '⚙️' },
   ];
@@ -1751,6 +1936,7 @@ export default function AdminDashboardPage() {
     { id: 'players', label: 'Players', icon: '⚽' },
     { id: 'applications', label: 'Applications', icon: '📋' },
     { id: 'content', label: 'Content', icon: '📰' },
+    { id: 'messages', label: 'Messages', icon: '💬' },
     { id: 'notifications', label: 'Notifications', icon: '🔔' },
   ];
 
@@ -1869,6 +2055,7 @@ export default function AdminDashboardPage() {
           )}
           {activeTab === 'revenue' && auth.role === 'ceo' && <RevenueTab />}
           {activeTab === 'content' && <ContentTab currentUser={auth} />}
+          {activeTab === 'messages' && <MessagesTab />}
           {activeTab === 'notifications' && <NotificationsTab />}
           {activeTab === 'audit' && auth.role === 'ceo' && <AuditTab />}
           {activeTab === 'settings' && auth.role === 'ceo' && <SettingsTab currentUser={auth} />}
